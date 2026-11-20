@@ -1,0 +1,87 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root { color-scheme: light; }
+  html { scroll-behavior: smooth; background: #F4F7FA; }
+  body { @apply bg-clinical text-slate-900 antialiased; font-family: 'Be Vietnam Pro', sans-serif; }
+  button, input { font: inherit; }
+  ::selection { background: #BFDBFE; color: #0F172A; }
+}
+@layer components {
+  .glass-panel, .glass-card { @apply border border-slate-200 bg-white; box-shadow: 0 1px 3px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.035); backdrop-filter: none; }
+  .glass-panel { @apply bg-white; }
+  .glass-card { @apply bg-white; }
+  .neon-button { @apply bg-medical-primary text-white shadow-sm transition hover:bg-blue-800 hover:shadow-md active:scale-[.98]; }
+  .eyebrow { @apply text-[10px] font-bold uppercase tracking-[.18em] text-medical-primary; }
+}
+.font-display { font-family: 'Outfit', 'Be Vietnam Pro', sans-serif; }
+.grid-noise { background-image: linear-gradient(rgba(0,91,159,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0,91,159,.035) 1px, transparent 1px); background-size: 42px 42px; }
+.glow-orb { filter: blur(55px); }
+#lookup { background: linear-gradient(120deg, #005B9F 0%, #0284C7 100%); }
+#lookup > .mx-auto { position: relative; z-index: 1; }
+#lookup .glass-panel { border-color: #E2E8F0; box-shadow: 0 12px 30px rgba(15,23,42,.12); }
+#lookup h1 { color: white; }
+#lookup p { color: #E0F2FE; }
+
+/* Migrate existing component utility classes to the clinical light palette. */
+[class~="bg-midnight"] { background-color: #F4F7FA !important; }
+[class*="bg-slate-950"] { background-color: #FFFFFF !important; }
+[class*="bg-slate-900"] { background-color: #FFFFFF !important; }
+[class*="bg-slate-800"] { background-color: #F1F5F9 !important; }
+[class*="bg-black"] { background-color: #F8FAFC !important; }
+[class~="bg-white/[.025]"], [class~="bg-white/[.03]"], [class~="bg-white/[.045]"], [class~="bg-white/5"] { background-color: #FFFFFF !important; }
+[class~="text-white"], [class~="text-slate-100"], [class~="text-slate-200"] { color: #0F172A !important; }
+[class~="text-slate-300"] { color: #334155 !important; }
+[class~="text-slate-400"], [class~="text-slate-500"] { color: #475569 !important; }
+[class*="border-white"] { border-color: #E2E8F0 !important; }
+[class*="text-cyan-200"], [class*="text-cyan-300"], [class*="text-cyan-400"] { color: #005B9F !important; }
+[class*="bg-cyan-400/"], [class*="bg-cyan-300/"] { background-color: #E0F2FE !important; }
+[class*="border-cyan-300/"], [class*="border-cyan-400/"] { border-color: #BAE6FD !important; }
+[class*="text-emerald-200"], [class*="text-emerald-300"], [class*="text-emerald-400"] { color: #047857 !important; }
+[class*="bg-emerald-300/"], [class*="bg-emerald-400/"] { background-color: #ECFDF5 !important; }
+[class*="border-emerald-300/"], [class*="border-emerald-400/"] { border-color: #A7F3D0 !important; }
+[class*="text-amber-300"], [class*="text-amber-400"] { color: #B45309 !important; }
+[class*="bg-amber-300/"], [class*="bg-amber-400/"] { background-color: #FFFBEB !important; }
+[class*="text-rose-300"], [class*="text-rose-400"] { color: #B91C1C !important; }
+[class*="bg-rose-400/"] { background-color: #FEF2F2 !important; }
+[class*="shadow-neon"] { box-shadow: 0 1px 3px rgba(15,23,42,.08) !important; }
+[class*="glow-orb"] { opacity: .18; }
+#ai-copilot > div { background: #FFFFFF !important; border-color: #E2E8F0 !important; box-shadow: 0 12px 36px rgba(15,23,42,.16) !important; }
+#ai-copilot .justify-end > div { background: #005B9F !important; color: white !important; }
+#ai-copilot .justify-end > div * { color: white !important; }
+#ai-copilot .border-t { border-color: #E2E8F0 !important; }
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: #F1F5F9; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+@keyframes pulse-soft { 0%,100% { opacity: .65; transform: scale(1); } 50% { opacity: 1; transform: scale(1.04); } }
+.animate-pulse-soft { animation: pulse-soft 4s ease-in-out infinite; }
+@media (max-width: 640px) { #lookup { padding-top: 2.5rem; } }
+@media print {
+  body { background: white !important; color: black !important; }
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .glass-panel, .glass-card { background: white !important; border: 1px solid #ccc !important; box-shadow: none !important; backdrop-filter: none !important; }
+}
+@media screen { .print-only { display: none !important; } }
+.neon-button { background: #005B9F !important; color: #FFFFFF !important; }
+.neon-button:hover { background: #004B83 !important; }
+#ai-copilot .justify-end > div { background: #005B9F !important; color: #FFFFFF !important; }
+#ai-copilot .justify-end > div * { color: #FFFFFF !important; }
+/* Range bars use a pale track; result marker remains clearly visible without a neon halo. */
+.glass-card .relative[class*="h-1.5"] { background-color: #E2E8F0 !important; }
+.glass-card [style*="width:"] { box-shadow: none !important; }
+.glass-card [class*="shadow-[0_0_12px"] { box-shadow: 0 0 0 2px #FFFFFF, 0 1px 3px rgba(15,23,42,.2) !important; }
+#lookup p[class] { color: #E0F2FE !important; }
+#lookup h1 span { background-image: linear-gradient(90deg, #BFDBFE, #FFFFFF) !important; }
+.glass-card .relative[class*="h-1.5"] { background-color: #ECFDF5 !important; }
+.glass-card .relative[class*="h-1.5"] > .absolute { background-image: none !important; background-color: #0D9488 !important; }
+.glass-card [class*="border-rose"] .relative[class*="h-1.5"] > .absolute { background-color: #EF4444 !important; }
+.glass-card [class*="border-amber"] .relative[class*="h-1.5"] > .absolute { background-color: #F59E0B !important; }
+
+section[class*="from-slate-900"] { background-image: none !important; background-color: #FFFFFF !important; border-color: #E2E8F0 !important; box-shadow: 0 1px 3px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.035) !important; }
+[class*="from-cyan-400"][class*="to-emerald-400"] { background-image: linear-gradient(135deg, #005B9F, #0284C7) !important; }
+
