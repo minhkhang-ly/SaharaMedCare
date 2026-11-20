@@ -1,4 +1,4 @@
-﻿# 🏥 SaharaMedCare - Cổng Thông Tin & Tra Cứu Kết Quả Cận Lâm Sàng Tích Hợp Chatbot AI
+# 🏥 SaharaMedCare - Cổng Thông Tin & Tra Cứu Kết Quả Cận Lâm Sàng Tích Hợp Chatbot AI
 
 > **Đồ án môn học:** Quản lý dự án CNTT  
 > **Nhóm thực hiện:** Nhóm 3 - Sahara  
@@ -10,9 +10,9 @@
 
 | STT | Họ và Tên | Vai Trò (Role) | Nhánh Phụ Trách | Nhiệm Vụ Trọng Tâm |
 | :---: | :--- | :--- | :--- | :--- |
-| **1** | **Lý Minh Khang** | **Tech Lead** | `feat/ai-realtime` | - Quản lý nhánh `main` và `develop`<br>- Thiết lập cấu trúc dự án & chuẩn hóa kiến trúc<br>- Phát triển module AI Clinician & Socket.IO Realtime<br>- Code Review & duyệt Merge Pull Request (PR) |
-| **2** | **Đỗ Huy An** | **Frontend Developer** | `feat/frontend-ui` | - Giao diện cổng tra cứu bệnh nhân & Stepper thời gian thực<br>- Giao diện Dashboard cận lâm sàng, xem ảnh DICOM/PACS<br>- Khung Chatbot AI & xuất phiếu báo cáo (PDF/In) |
-| **3** | **Nguyễn Thế Ngọc** | **Backend Developer** | `feat/backend-api` | - Thiết kế & tối ưu Database MySQL y tế<br>- Xây dựng RESTful API tra cứu & kết quả xét nghiệm<br>- Tích hợp Realtime cập nhật tiến trình mẫu & logic cảnh báo |
+| **1** | **Lý Minh Khang** | **Tech Lead** | `feat/infra-frontend` | - Quản lý nhánh `main` và `develop`<br>- Thiết lập cấu trúc dự án & chuẩn hóa kiến trúc<br>- Hỗ trợ xử lý Frontend<br>- Kết nối và cấu hình Domain, Hosting, hạ tầng triển khai (server/mạng)<br>- Review & duyệt Merge Pull Request (PR) từ các thành viên |
+| **2** | **Đỗ Huy An** | **Frontend Developer** | `feat/frontend-ui` | - Giao diện cổng tra cứu bệnh nhân & Stepper thời gian thực<br>- Giao diện Dashboard cận lâm sàng, xem ảnh DICOM/PACS<br>- Khung Chatbot AI & xuất phiếu báo cáo (PDF/In)<br>*(Có thể tách các nhánh con `feat/ui-...`)* |
+| **3** | **Nguyễn Thế Ngọc** | **Backend Developer** | `feat/backend-ai` | - Phụ trách toàn bộ Backend & Database MySQL y tế<br>- Xây dựng RESTful API tra cứu & kết quả xét nghiệm<br>- Phát triển API Realtime đồng bộ tiến trình mẫu<br>- Tích hợp Chatbot AI và logic tự động hóa cảnh báo rủi ro<br>*(Có thể tách các nhánh con `feat/api-...`, `feat/ai-...`)* |
 
 ---
 
@@ -24,9 +24,9 @@ Dự án áp dụng mô hình chuẩn **Git Flow** nhằm đảm bảo an toàn 
   main (Production / Release chính thức)
     │
     └── develop (Nhánh tích hợp chính)
-          ├── feat/ai-realtime     (Tech Lead - Lý Minh Khang)
+          ├── feat/infra-frontend  (Tech Lead - Lý Minh Khang)
           ├── feat/frontend-ui     (Frontend Dev - Đỗ Huy An)
-          └── feat/backend-api     (Backend Dev - Nguyễn Thế Ngọc)
+          └── feat/backend-ai      (Backend Dev - Nguyễn Thế Ngọc)
 ```
 
 ### 1. Nhánh Cốt Lõi (Core Branches)
@@ -34,9 +34,9 @@ Dự án áp dụng mô hình chuẩn **Git Flow** nhằm đảm bảo an toàn 
 - `develop`: Nhánh tích hợp trung tâm. Toàn bộ các tính năng mới sau khi review xong sẽ được merge vào đây.
 
 ### 2. Nhánh Tính Năng Của Thành Viên (Feature Branches)
-- `feat/ai-realtime` *(Lý Minh Khang)*: Tập trung phát triển trợ lý ảo AI Clinician, luồng gợi ý chẩn đoán sơ bộ, tích hợp Socket.IO streaming trạng thái mẫu phân tích tự động.
-- `feat/frontend-ui` *(Đỗ Huy An)*: Tập trung phát triển giao diện React + Vite + Tailwind CSS, các màn hình tra cứu, bảng chỉ số xét nghiệm, modal xem phim X-quang/siêu âm. *(Có thể tách thêm các nhánh con `feat/ui-...`)*.
-- `feat/backend-api` *(Nguyễn Thế Ngọc)*: Tập trung phát triển server Express.js, kết nối MySQL Connection Pool, viết các endpoints REST API, xác thực OTP/mã hồ sơ. *(Có thể tách thêm các nhánh con `feat/api-...`)*.
+- `feat/infra-frontend` *(Lý Minh Khang)*: Quản lý hạ tầng triển khai, cấu hình server/domain, hỗ trợ phát triển các tính năng frontend nền tảng.
+- `feat/frontend-ui` *(Đỗ Huy An)*: Tập trung phát triển giao diện React + Vite + Tailwind CSS, các màn hình tra cứu, bảng chỉ số xét nghiệm, modal xem phim X-quang/siêu âm. *(Tách thêm các nhánh con `feat/ui-...` khi phát triển)*.
+- `feat/backend-ai` *(Nguyễn Thế Ngọc)*: Phát triển server Express.js, kết nối MySQL Connection Pool, viết các endpoints REST API, Socket.IO Realtime, tích hợp Chatbot AI y khoa và logic tự động hóa. *(Tách thêm các nhánh con `feat/api-...`, `feat/ai-...`)*.
 
 ### 3. Quy Trình Phối Hợp Làm Việc (Workflow Guidelines)
 1. Trước khi code tính năng mới, luôn kéo mã nguồn mới nhất:
@@ -46,7 +46,7 @@ Dự án áp dụng mô hình chuẩn **Git Flow** nhằm đảm bảo an toàn 
    ```
 2. Chuyển sang nhánh làm việc cá nhân (hoặc tạo nhánh con từ nhánh cá nhân):
    ```bash
-   git checkout feat/frontend-ui   # Hoặc feat/backend-api, feat/ai-realtime
+   git checkout feat/frontend-ui   # Hoặc feat/backend-ai, feat/infra-frontend
    ```
 3. Đặt thông điệp commit theo chuẩn **Conventional Commits**:
    - `feat: thêm chức năng mới...`
