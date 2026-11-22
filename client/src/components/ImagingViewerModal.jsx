@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { 
-  LuX, 
-  LuZoomIn, 
-  LuZoomOut, 
-  LuRotateCw, 
-  LuSunMedium, 
-  LuRefreshCw, 
-  LuDownload, 
-  LuMaximize2,
-  LuFileText
+  X, 
+  ZoomIn, 
+  ZoomOut, 
+  RotateCw, 
+  SunMedium, 
+  RefreshCw, 
+  Download, 
+  Maximize2,
+  FileText
 } from 'lucide-react';
 
 export default function ImagingViewerModal({ imageItem, onClose }) {
@@ -49,7 +49,7 @@ export default function ImagingViewerModal({ imageItem, onClose }) {
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
               title="Thu nhỏ"
             >
-              <LuZoomOut className="w-5 h-5" />
+              <ZoomOut className="w-5 h-5" />
             </button>
             <span className="text-xs font-mono text-slate-400 w-12 text-center">
               {Math.round(zoomLevel * 100)}%
@@ -59,14 +59,14 @@ export default function ImagingViewerModal({ imageItem, onClose }) {
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
               title="Phóng to"
             >
-              <LuZoomIn className="w-5 h-5" />
+              <ZoomIn className="w-5 h-5" />
             </button>
             <button
               onClick={handleRotate}
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
               title="Xoay 90 độ"
             >
-              <LuRotateCw className="w-5 h-5" />
+              <RotateCw className="w-5 h-5" />
             </button>
             <button
               onClick={() => setIsInverted(!isInverted)}
@@ -75,14 +75,14 @@ export default function ImagingViewerModal({ imageItem, onClose }) {
               }`}
               title="Đảo màu tương phản (Invert DICOM contrast)"
             >
-              <LuSunMedium className="w-5 h-5" />
+              <SunMedium className="w-5 h-5" />
             </button>
             <button
               onClick={handleReset}
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
               title="Đặt lại mặc định"
             >
-              <LuRefreshCw className="w-5 h-5" />
+              <RefreshCw className="w-5 h-5" />
             </button>
             
             <div className="h-6 w-px bg-slate-700 mx-1"></div>
@@ -92,7 +92,7 @@ export default function ImagingViewerModal({ imageItem, onClose }) {
               className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors"
               title="Đóng modal"
             >
-              <LuX className="w-5 h-5 stroke-[2.5]" />
+              <X className="w-5 h-5 stroke-[2.5]" />
             </button>
           </div>
         </div>
