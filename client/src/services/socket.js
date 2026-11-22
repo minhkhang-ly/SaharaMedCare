@@ -63,3 +63,4 @@ export function subscribeOrderStatus(orderId, onStatusUpdate) {
 export function getSocket() {
   return socket || initSocketConnection();
 }
+

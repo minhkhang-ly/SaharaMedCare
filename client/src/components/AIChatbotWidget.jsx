@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Bot, ChevronRight, Info, Maximize2, Minimize2, Send, Sparkles, X, Stethoscope, Apple, AlertTriangle } from 'lucide-react';
 import { askAIChatbotApi } from '../services/api';
 
