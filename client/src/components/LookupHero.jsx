@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, CheckCircle2, Clock3, FlaskConical, FileCheck2, LockKeyhole, Search, Sparkles, UserRound, AlertCircle, Database } from 'lucide-react';
 
 export default function LookupHero({

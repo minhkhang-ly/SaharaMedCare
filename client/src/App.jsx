@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { 
   Activity, 
   ArrowUpRight, 
@@ -13,7 +13,8 @@ import {
   ShieldCheck, 
   Sparkles,
   Wifi,
-  WifiOff
+  WifiOff,
+  Radio
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import LookupHero from './components/LookupHero';
@@ -23,6 +24,7 @@ import PriceCatalogModal from './components/PriceCatalogModal';
 import GuideModal from './components/GuideModal';
 import PrintReportView from './components/PrintReportView';
 import { lookupPatientApi, checkBackendStatus } from './services/api';
+import { subscribeOrderStatus } from './services/socket';
 import { mockPatients } from './data/mockLabData';
 
 export default function App() {
@@ -33,13 +35,14 @@ export default function App() {
   const [lookupError, setLookupError] = useState('');
   const [dataSource, setDataSource] = useState('Khởi tạo');
   const [backendOnline, setBackendOnline] = useState(false);
+  const [realtimeActive, setRealtimeActive] = useState(false);
   const [catalog, setCatalog] = useState(false);
   const [guide, setGuide] = useState(false);
   const [prompt, setPrompt] = useState('');
   
   const resultRef = useRef(null);
 
-  // Kiểm tra kết nối Backend API khi ứng dụng khởi động
+  // 1. Kiểm tra kết nối Backend API khi ứng dụng khởi động
   useEffect(() => {
     checkBackendStatus().then(status => {
       setBackendOnline(status.online);
@@ -59,7 +62,36 @@ export default function App() {
     });
   }, []);
 
-  // Hàm tra cứu gọi API thật từ Backend
+  // 2. Lắng nghe cập nhật trạng thái xét nghiệm Realtime qua Socket.IO
+  useEffect(() => {
+    if (!currentPatient?.orderId) return;
+
+    setRealtimeActive(true);
+    const unsubscribe = subscribeOrderStatus(currentPatient.orderId, (updatedData) => {
+      console.log('[App] Nhận tín hiệu Realtime cập nhật tiến trình:', updatedData);
+      
+      setCurrentPatient(prev => {
+        const nextStatus = updatedData.status || updatedData.currentStatus || 'COMPLETED';
+        const nextStep = updatedData.step || updatedData.currentStep || (nextStatus === 'COMPLETED' ? 3 : nextStatus === 'PROCESSING' ? 2 : 1);
+        const nextStatusText = updatedData.statusText || (nextStatus === 'COMPLETED' ? 'Đã có kết quả & Bác sĩ trưởng khoa duyệt' : 'Đang phân tích');
+
+        return {
+          ...prev,
+          currentStatus: nextStatus,
+          currentStep: nextStep,
+          statusText: nextStatusText,
+          completedTime: updatedData.completedTime || prev.completedTime || 'Vừa hoàn tất',
+          categories: updatedData.categories || prev.categories
+        };
+      });
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [currentPatient?.orderId]);
+
+  // 3. Hàm tra cứu gọi API thật từ Backend
   const lookup = async (code, phone) => {
     setLoading(true);
     setLookupError('');
@@ -88,19 +120,27 @@ export default function App() {
       <aside className="no-print bg-slate-950 border-b border-white/5 py-1.5 px-4 text-center text-[11px] text-slate-400 flex items-center justify-center gap-3">
         <span className="flex items-center gap-1.5">
           {backendOnline ? (
-            <span className="flex items-center gap-1 text-emerald-400 font-medium">
+            <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Backend LIS Server: Đã kết nối (http://localhost:5000)
+              LIS API: Online (http://localhost:5000)
             </span>
           ) : (
             <span className="flex items-center gap-1 text-amber-400">
-              <WifiOff size={12} /> Backend Offline - Đang chạy chế độ đệm dữ liệu lâm sàng
+              <WifiOff size={12} /> Backend Offline - Chế độ dữ liệu đệm
             </span>
           )}
         </span>
+
+        <span className="text-slate-600">|</span>
+
+        <span className="flex items-center gap-1 text-cyan-300 font-mono">
+          <Radio size={12} className={realtimeActive ? 'text-emerald-400 animate-pulse' : 'text-slate-500'} />
+          Socket.IO Realtime: {realtimeActive ? `Listening (${currentPatient?.orderId || 'Active'})` : 'Standby'}
+        </span>
+
         <span className="hidden sm:inline text-slate-600">|</span>
         <span className="hidden sm:inline text-slate-400">
-          Nguồn dữ liệu hiện tại: <strong className="text-cyan-300 font-mono">{dataSource}</strong>
+          Nguồn dữ liệu: <strong className="text-cyan-300 font-mono">{dataSource}</strong>
         </span>
       </aside>
 
@@ -134,7 +174,7 @@ export default function App() {
                 Mẫu của {currentPatient.fullName} đang được phân tích tại phòng xét nghiệm
               </h2>
               <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-400">
-                Hệ thống máy phân tích tự động (Sysmex / Cobas) đang xử lý mẫu bệnh phẩm. Kết quả sẽ được cập nhật trực tiếp ngay khi Bác sĩ Trưởng khoa hoàn tất ký số.
+                Hệ thống máy phân tích tự động (Sysmex / Cobas) đang xử lý mẫu bệnh phẩm. Kết quả sẽ được cập nhật trực tiếp qua WebSocket ngay khi Bác sĩ Trưởng khoa hoàn tất ký số.
               </p>
               <div className="mx-auto mt-5 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-xs text-slate-300">
                 <Clock3 size={15} className="text-cyan-300" /> Dự kiến hoàn tất: <strong className="text-white">{currentPatient.completedTime || 'Trong vòng 30 phút'}</strong>
