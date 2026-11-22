@@ -1,5 +1,5 @@
 /**
- * SaharaMedCare - Frontend API Service
+ * SaharaMedCare - Frontend API Service (Giai đoạn 1: RESTful API Lõi)
  * Connects Frontend Client to Express Backend (http://localhost:5000/api)
  */
 
@@ -121,7 +121,7 @@ export async function getGuidelinesApi() {
 }
 
 /**
- * Gửi câu hỏi đến Trợ lý AI y tế (Sahara AI Copilot)
+ * Gửi câu hỏi đến Chatbot API của Backend (Giai đoạn 1: Interface & Kết nối Endpoint)
  * Endpoint: POST /api/chatbot/chat
  */
 export async function askAIChatbotApi(prompt, patientContext) {
@@ -131,56 +131,16 @@ export async function askAIChatbotApi(prompt, patientContext) {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        prompt,
-        patientContext: {
-          fullName: patientContext?.fullName,
-          patientId: patientContext?.patientId,
-          clinicalDiagnosis: patientContext?.clinicalDiagnosis,
-          abnormalFindings: patientContext?.riskSummary?.keyFindings || [],
-          riskLevel: patientContext?.riskSummary?.overallRisk,
-          recommendedDepts: patientContext?.riskSummary?.recommendedDepartments || []
-        }
-      })
+      body: JSON.stringify({ prompt, patientContext })
     });
 
     const result = await res.json();
     if (res.ok && result.success && result.reply) {
       return result.reply;
     }
+    return result.reply || 'Hệ thống chatbot đang được chuẩn bị cho Giai đoạn 2.';
   } catch (error) {
-    console.warn('[Chatbot API] Không thể kết nối chatbot server:', error.message);
+    console.warn('[Chatbot API] Lỗi kết nối:', error.message);
+    return 'Xin chào! Trợ lý AI đang trong quá trình chuẩn bị kết nối (Giai đoạn 2). Bạn vui lòng quay lại sau.';
   }
-
-  // Fallback AI Clinician reasoning engine khi server AI bận
-  const lower = prompt.toLowerCase();
-  const name = patientContext?.fullName || 'bạn';
-  const findings = patientContext?.riskSummary?.keyFindings || [];
-
-  if (lower.includes('bất thường') || lower.includes('nguy cơ') || lower.includes('kết quả')) {
-    if (findings.length > 0) {
-      const summary = findings.map((f, i) => `${i + 1}. ${f.title}: ${f.detail}`).join('\n\n');
-      return `Chào ${name}, dựa trên kết quả cận lâm sàng của bạn, tôi phát hiện các điểm cần lưu ý sau:\n\n${summary}\n\n👉 Khuyến cáo: Bạn nên mang kết quả này tới gặp Bác sĩ chuyên khoa để được tư vấn phác đồ điều trị cụ thể.`;
-    }
-    return `Hồ sơ của ${name} các chỉ số cơ bản đều nằm trong giới hạn an toàn bình thường.`;
-  }
-
-  if (lower.includes('khám') || lower.includes('chuyên khoa') || lower.includes('ở đâu')) {
-    const depts = patientContext?.riskSummary?.recommendedDepartments || [];
-    if (depts.length > 0) {
-      const list = depts.map(d => `• ${d.name} (${d.urgency})`).join('\n');
-      return `Dựa trên kết quả cận lâm sàng, hệ thống khuyến nghị ${name} nên ưu tiên thăm khám tại các chuyên khoa:\n\n${list}\n\nBạn có thể đến Phòng Khám Đa Khoa Sahara để được khám đúng chuyên khoa.`;
-    }
-    return `Bạn có thể đăng ký tái khám tại Phòng Khám Nội Tổng Quát của Bệnh viện Sahara.`;
-  }
-
-  if (lower.includes('dinh dưỡng') || lower.includes('ăn') || lower.includes('uống') || lower.includes('kiêng')) {
-    const diet = patientContext?.riskSummary?.dietaryAdvice;
-    if (Array.isArray(diet) && diet.length > 0) {
-      return `Chế độ dinh dưỡng & lối sống được gợi ý cho ${name}:\n\n` + diet.map(d => `• ${d}`).join('\n');
-    }
-    return `Bạn nên duy trì chế độ ăn thanh đạm, giảm tinh bột hấp thu nhanh và đường ngọt, tăng cường rau xanh và vận động thể lực tối thiểu 30 phút mỗi ngày.`;
-  }
-
-  return `Tôi đã ghi nhận câu hỏi: "${prompt}". Với hồ sơ cận lâm sàng hiện tại của ${name}, tôi có thể hỗ trợ giải thích ý nghĩa các chỉ số xét nghiệm, đánh giá mức độ rủi ro hoặc tư vấn chuyên khoa cần khám. Bạn muốn tìm hiểu kỹ hơn về chỉ số nào?`;
 }
