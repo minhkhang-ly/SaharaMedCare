@@ -1,9 +1,27 @@
-import React from 'react';
-import { LuX, LuHelpCircle, LuAlertTriangle, LuCheckCircle2, LuClock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, CircleHelp, AlertTriangle, CheckCircle2, Clock, Loader2 } from 'lucide-react';
+import { getGuidelinesApi } from '../services/api';
 import { sampleGuidelines } from '../data/mockLabData';
 
 export default function GuideModal({ isOpen, onClose }) {
   if (!isOpen) return null;
+
+  const [guidelines, setGuidelines] = useState(sampleGuidelines);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true);
+      getGuidelinesApi()
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            setGuidelines(data);
+          }
+        })
+        .catch(err => console.warn('[GuideModal] Dùng dữ liệu fallback:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [isOpen]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
@@ -13,46 +31,53 @@ export default function GuideModal({ isOpen, onClose }) {
         <div className="px-6 py-5 bg-gradient-to-r from-teal-700 to-brand-700 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-              <LuHelpCircle className="w-6 h-6 text-teal-200" />
+              <CircleHelp className="w-6 h-6 text-teal-200" />
             </div>
             <div>
               <h3 className="text-lg font-bold">Hướng Dẫn Chuẩn Bị Lấy Mẫu Xét Nghiệm</h3>
-              <p className="text-xs text-teal-100">Đảm bảo kết quả cận lâm sàng đạt độ chuẩn xác lâm sàng cao nhất</p>
+              <p className="text-xs text-teal-100">Đảm bảo kết quả cận lâm sàng đạt độ chuẩn xác lâm sàng cao nhất (Dữ liệu từ Hội đồng Khoa học)</p>
             </div>
           </div>
           <button 
             onClick={onClose}
             className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
           >
-            <LuX className="w-5 h-5 stroke-[2.5]" />
+            <X className="w-5 h-5 stroke-[2.5]" />
           </button>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {sampleGuidelines.map((item, idx) => (
-            <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-6 h-6 rounded-full bg-brand-100 text-brand-700 font-bold text-xs flex items-center justify-center">
-                  {idx + 1}
-                </span>
-                <h4 className="font-bold text-sm sm:text-base text-slate-900">
-                  {item.title}
-                </h4>
-              </div>
-
-              <div className="ml-8 space-y-1.5 text-xs sm:text-sm">
-                <div className="flex items-start gap-2 text-slate-700">
-                  <LuCheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <span><strong>Yêu cầu bắt buộc:</strong> {item.requirement}</span>
-                </div>
-                <div className="flex items-start gap-2 text-amber-800 bg-amber-50/80 p-2 rounded-xl border border-amber-200">
-                  <LuAlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <span><strong>Lưu ý quan trọng:</strong> {item.note}</span>
-                </div>
-              </div>
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-10 text-slate-500 text-sm">
+              <Loader2 className="w-8 h-8 text-teal-600 animate-spin mb-2" />
+              <span>Đang tải hướng dẫn chuẩn bị mẫu...</span>
             </div>
-          ))}
+          ) : (
+            guidelines.map((item, idx) => (
+              <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-6 h-6 rounded-full bg-brand-100 text-brand-700 font-bold text-xs flex items-center justify-center">
+                    {idx + 1}
+                  </span>
+                  <h4 className="font-bold text-sm sm:text-base text-slate-900">
+                    {item.title}
+                  </h4>
+                </div>
+
+                <div className="ml-8 space-y-1.5 text-xs sm:text-sm">
+                  <div className="flex items-start gap-2 text-slate-700">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <span><strong>Yêu cầu bắt buộc:</strong> {item.requirement}</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-amber-800 bg-amber-50/80 p-2 rounded-xl border border-amber-200">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <span><strong>Lưu ý quan trọng:</strong> {item.note}</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Footer */}
