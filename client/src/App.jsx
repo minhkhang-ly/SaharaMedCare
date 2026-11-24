@@ -22,7 +22,8 @@ import AIChatbotWidget from './components/AIChatbotWidget';
 import PriceCatalogModal from './components/PriceCatalogModal';
 import GuideModal from './components/GuideModal';
 import PrintReportView from './components/PrintReportView';
-import { lookupPatientApi, checkBackendStatus } from './services/api';
+import AuthModal from './components/AuthModal';
+import { lookupPatientApi, checkBackendStatus, getStoredAuth, logoutAuth } from './services/api';
 import { mockPatients } from './data/mockLabData';
 
 export default function App() {
@@ -36,6 +37,9 @@ export default function App() {
   const [catalog, setCatalog] = useState(false);
   const [guide, setGuide] = useState(false);
   const [prompt, setPrompt] = useState('');
+  const [authUser, setAuthUser] = useState(() => getStoredAuth()?.user || null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
   
   const resultRef = useRef(null);
 
@@ -81,11 +85,31 @@ export default function App() {
     }
   };
 
+  const handleOpenAuth = (mode = 'login') => {
+    setAuthModalMode(mode);
+    setAuthModalOpen(true);
+  };
+
+  const handleAuthSuccess = (user) => {
+    setAuthUser(user);
+    // Nếu là bệnh nhân có sẵn mã hồ sơ -> tự động nạp kết quả của bệnh nhân đó
+    if (user?.role === 'PATIENT' && user.patientId) {
+      setPatientCode(user.patientId);
+      if (user.phoneNumber) setPhoneNumber(user.phoneNumber);
+      lookup(user.patientId, user.phoneNumber || '');
+    }
+  };
+
+  const handleLogout = () => {
+    logoutAuth();
+    setAuthUser(null);
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-clinical text-slate-900">
       
       {/* Backend Status Bar */}
-      <aside className="no-print bg-slate-950 border-b border-white/5 py-1.5 px-4 text-center text-[11px] text-slate-400 flex items-center justify-center gap-3">
+      <aside className="no-print bg-slate-950 border-b border-white/5 py-1.5 px-4 text-center text-[11px] text-slate-400 flex flex-wrap items-center justify-center gap-3">
         <span className="flex items-center gap-1.5">
           {backendOnline ? (
             <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
@@ -103,12 +127,25 @@ export default function App() {
         <span className="hidden sm:inline text-slate-400">
           Nguồn dữ liệu: <strong className="text-cyan-300 font-mono">{dataSource}</strong>
         </span>
+
+        {authUser && (
+          <>
+            <span className="hidden sm:inline text-slate-600">|</span>
+            <span className="text-teal-300 font-medium">
+              Phiên đăng nhập: <strong>{authUser.fullName}</strong> ({authUser.role === 'DOCTOR' ? 'Bác sĩ/Lab' : 'Bệnh nhân'})
+              {authUser.isDemoAuth && <span className="ml-1 text-amber-300">[Demo Auth]</span>}
+            </span>
+          </>
+        )}
       </aside>
 
       <Navbar 
         onOpenCatalog={() => setCatalog(true)} 
         onOpenGuide={() => setGuide(true)} 
         onScrollToLookup={() => document.getElementById('lookup')?.scrollIntoView({ behavior: 'smooth' })}
+        authUser={authUser}
+        onOpenAuth={handleOpenAuth}
+        onLogout={handleLogout}
       />
 
       <main className="no-print">
@@ -225,6 +262,12 @@ export default function App() {
       <PrintReportView patient={currentPatient} />
       <PriceCatalogModal isOpen={catalog} onClose={() => setCatalog(false)} />
       <GuideModal isOpen={guide} onClose={() => setGuide(false)} />
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authModalMode}
+        onAuthSuccess={handleAuthSuccess}
+      />
     </div>
   );
 }
