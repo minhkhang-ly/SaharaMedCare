@@ -27,9 +27,17 @@ import { lookupPatientApi, checkBackendStatus, getStoredAuth, logoutAuth } from 
 import { mockPatients } from './data/mockLabData';
 
 export default function App() {
-  const [patientCode, setPatientCode] = useState('BN2026-089');
-  const [phoneNumber, setPhoneNumber] = useState('0912345678');
-  const [currentPatient, setCurrentPatient] = useState(mockPatients['BN2026-089']);
+  const initialUser = getStoredAuth()?.user || null;
+  const isInitialPatient = initialUser?.role === 'PATIENT' && Boolean(initialUser?.patientId);
+
+  const [authUser, setAuthUser] = useState(initialUser);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
+  const [patientCode, setPatientCode] = useState(isInitialPatient ? initialUser.patientId : 'BN2026-089');
+  const [phoneNumber, setPhoneNumber] = useState(isInitialPatient ? (initialUser.phoneNumber || '') : '0912345678');
+  const [currentPatient, setCurrentPatient] = useState(
+    isInitialPatient ? (mockPatients[initialUser.patientId] || null) : mockPatients['BN2026-089']
+  );
   const [loading, setLoading] = useState(false);
   const [lookupError, setLookupError] = useState('');
   const [dataSource, setDataSource] = useState('Khởi tạo');
@@ -37,38 +45,58 @@ export default function App() {
   const [catalog, setCatalog] = useState(false);
   const [guide, setGuide] = useState(false);
   const [prompt, setPrompt] = useState('');
-  const [authUser, setAuthUser] = useState(() => getStoredAuth()?.user || null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState('login');
   
   const resultRef = useRef(null);
 
-  // 1. Kiểm tra kết nối Backend API khi ứng dụng khởi động (Giai đoạn 1: RESTful API)
+  // 1. Kiểm tra kết nối Backend API khi ứng dụng khởi động
   useEffect(() => {
+    const targetCode = isInitialPatient ? initialUser.patientId : 'BN2026-089';
+    const targetPhone = isInitialPatient ? (initialUser.phoneNumber || '') : '0912345678';
+
     checkBackendStatus().then(status => {
       setBackendOnline(status.online);
       if (status.online) {
-        // Tải hồ sơ mặc định trực tiếp từ Backend API
-        lookupPatientApi('BN2026-089', '0912345678')
+        lookupPatientApi(targetCode, targetPhone)
           .then(res => {
             if (res && res.data) {
               setCurrentPatient(res.data);
               setDataSource(res.source || 'REST API');
             }
           })
-          .catch(err => console.warn('[App] Lỗi tải hồ sơ ban đầu:', err));
+          .catch(err => {
+            console.warn('[App] Lỗi tải hồ sơ ban đầu:', err);
+            if (isInitialPatient) {
+              setCurrentPatient(null);
+              setDataSource('MySQL / Chưa có phiếu XN');
+            }
+          });
       } else {
         setDataSource('Chế độ Offline');
       }
     });
   }, []);
 
-  // 2. Hàm tra cứu gọi API thật từ Backend
-  const lookup = async (code, phone) => {
+  // 2. Hàm tra cứu gọi API thật từ Backend (có chặn bảo mật theo vai trò Bệnh nhân)
+  const lookup = async (code, phone, overrideUser = undefined) => {
+    const activeUser = overrideUser !== undefined ? overrideUser : authUser;
+    const cleanCode = (code || '').trim();
+
+    // Chặn tuyệt đối tài khoản Bệnh nhân tra cứu hồ sơ của bệnh nhân khác
+    if (
+      activeUser?.role === 'PATIENT' &&
+      activeUser?.patientId &&
+      cleanCode.toUpperCase() !== activeUser.patientId.toUpperCase()
+    ) {
+      setLookupError(
+        `Vì bảo mật thông tin y tế, tài khoản Bệnh nhân chỉ được xem hồ sơ của chính mình (${activeUser.patientId}). Vui lòng đăng xuất nếu muốn tra cứu hồ sơ khác.`
+      );
+      return;
+    }
+
     setLoading(true);
     setLookupError('');
     try {
-      const res = await lookupPatientApi(code, phone);
+      const res = await lookupPatientApi(cleanCode, phone);
       if (res && res.data) {
         setCurrentPatient(res.data);
         setDataSource(res.source || 'REST API');
@@ -76,10 +104,19 @@ export default function App() {
           resultRef.current?.scrollIntoView({ behavior: 'smooth' });
         }, 80);
       } else {
-        setLookupError(`Không tìm thấy hồ sơ với mã "${code}". Vui lòng thử lại.`);
+        if (activeUser?.role === 'PATIENT') {
+          setCurrentPatient(null);
+        }
+        setLookupError(`Không tìm thấy hồ sơ với mã "${cleanCode}". Vui lòng thử lại.`);
       }
     } catch (err) {
-      setLookupError(err.message || `Không tìm thấy hồ sơ "${code}". Thử: BN2026-089, BN2026-042 hoặc BN2026-105.`);
+      if (activeUser?.role === 'PATIENT') {
+        // Không giữ lại kết quả của bệnh nhân cũ nếu tài khoản mới chưa có phiếu xét nghiệm
+        setCurrentPatient(null);
+        setLookupError('');
+      } else {
+        setLookupError(err.message || `Không tìm thấy hồ sơ "${cleanCode}". Thử: BN2026-089, BN2026-042 hoặc BN2026-105.`);
+      }
     } finally {
       setLoading(false);
     }
@@ -92,17 +129,20 @@ export default function App() {
 
   const handleAuthSuccess = (user) => {
     setAuthUser(user);
-    // Nếu là bệnh nhân có sẵn mã hồ sơ -> tự động nạp kết quả của bệnh nhân đó
+    setLookupError('');
+    // Nếu là bệnh nhân -> xóa ngay dữ liệu cũ đang hiển thị và chỉ nạp đúng hồ sơ của bệnh nhân đó
     if (user?.role === 'PATIENT' && user.patientId) {
+      setCurrentPatient(null);
       setPatientCode(user.patientId);
-      if (user.phoneNumber) setPhoneNumber(user.phoneNumber);
-      lookup(user.patientId, user.phoneNumber || '');
+      setPhoneNumber(user.phoneNumber || '');
+      lookup(user.patientId, user.phoneNumber || '', user);
     }
   };
 
   const handleLogout = () => {
     logoutAuth();
     setAuthUser(null);
+    setLookupError('');
   };
 
   return (
@@ -159,10 +199,31 @@ export default function App() {
           isLoading={loading}
           lookupError={lookupError}
           dataSource={dataSource}
+          authUser={authUser}
+          onLogout={handleLogout}
         />
 
         <div ref={resultRef} data-workspace>
-          {currentPatient?.currentStatus === 'PROCESSING' ? (
+          {!currentPatient ? (
+            <section className="mx-4 mb-20 rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm sm:mx-6 lg:mx-auto lg:max-w-3xl">
+              <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-blue-50 text-medical-primary">
+                <FileText size={30} />
+              </div>
+              <div className="mt-4 text-[11px] font-bold uppercase tracking-[.18em] text-medical-primary">
+                Hồ sơ điện tử cá nhân
+              </div>
+              <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900">
+                {authUser?.role === 'PATIENT'
+                  ? `Xin chào ${authUser.fullName}, bạn chưa có phiếu kết quả cận lâm sàng`
+                  : 'Chưa có dữ liệu hồ sơ để hiển thị'}
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500">
+                {authUser?.role === 'PATIENT'
+                  ? `Mã bệnh nhân của bạn là ${authUser.patientId}. Khi bạn thực hiện xét nghiệm hoặc chẩn đoán hình ảnh tại bệnh viện, kết quả sẽ tự động hiển thị bảo mật ngay tại đây.`
+                  : 'Vui lòng nhập Mã hồ sơ và Số điện thoại ở khung tra cứu phía trên để xem kết quả.'}
+              </p>
+            </section>
+          ) : currentPatient?.currentStatus === 'PROCESSING' ? (
             <section className="mx-4 mb-20 rounded-3xl border border-cyan-300/20 bg-cyan-300/5 p-10 text-center sm:mx-6 lg:mx-auto lg:max-w-3xl">
               <div className="mx-auto grid h-16 w-16 animate-pulse place-items-center rounded-2xl bg-cyan-400/10 text-cyan-300">
                 <FlaskConical size={30} />

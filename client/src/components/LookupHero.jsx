@@ -1,5 +1,21 @@
 import React, { useState } from 'react';
-import { ArrowRight, CheckCircle2, Clock3, FlaskConical, FileCheck2, LockKeyhole, Search, Sparkles, UserRound, AlertCircle, Database } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  FlaskConical,
+  FileCheck2,
+  LockKeyhole,
+  Search,
+  Sparkles,
+  UserRound,
+  AlertCircle,
+  Database,
+  ShieldCheck,
+  RefreshCw,
+  Stethoscope,
+  LogOut
+} from 'lucide-react';
 
 export default function LookupHero({
   patientCode,
@@ -10,12 +26,22 @@ export default function LookupHero({
   currentPatient,
   isLoading,
   lookupError,
-  dataSource
+  dataSource,
+  authUser,
+  onLogout
 }) {
   const [localError, setLocalError] = useState('');
 
+  const isPatientLoggedIn = authUser?.role === 'PATIENT' && Boolean(authUser?.patientId);
+  const isDoctorLoggedIn = authUser?.role === 'DOCTOR';
+
   const submit = (e) => {
     e.preventDefault();
+    if (isPatientLoggedIn) {
+      setLocalError('');
+      onLookup(authUser.patientId, authUser.phoneNumber || '');
+      return;
+    }
     if (!patientCode.trim()) {
       return setLocalError('Vui lòng nhập mã hồ sơ (Ví dụ: BN2026-089) để bắt đầu tra cứu.');
     }
@@ -24,13 +50,14 @@ export default function LookupHero({
   };
 
   const handleSelectPreset = (code, phone) => {
+    if (isPatientLoggedIn) return;
     setPatientCode(code);
     setPhoneNumber(phone);
     setLocalError('');
     onLookup(code, phone);
   };
 
-  const step = currentPatient?.currentStep || 3;
+  const step = currentPatient?.currentStep || (currentPatient ? 3 : 0);
   const activeError = localError || lookupError;
 
   return (
@@ -59,86 +86,165 @@ export default function LookupHero({
             
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="eyebrow">LIS Cloud Lookup</div>
-                <h2 className="mt-1 font-display text-xl font-semibold text-white">Tra cứu hồ sơ cận lâm sàng</h2>
+                <div className="eyebrow">
+                  {isPatientLoggedIn
+                    ? 'Personal Medical Record'
+                    : isDoctorLoggedIn
+                    ? 'Doctor / Lab Staff Lookup'
+                    : 'LIS Cloud Lookup'}
+                </div>
+                <h2 className="mt-1 font-display text-xl font-semibold text-white">
+                  {isPatientLoggedIn
+                    ? 'Hồ sơ cận lâm sàng cá nhân'
+                    : 'Tra cứu hồ sơ cận lâm sàng'}
+                </h2>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {dataSource && (
                   <span className="flex items-center gap-1 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-mono text-cyan-300">
                     <Database size={11} /> {dataSource}
                   </span>
                 )}
-                <div className="flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] text-emerald-300">
-                  <LockKeyhole size={12} /> Mã hóa bảo mật
+                {isDoctorLoggedIn ? (
+                  <div className="flex items-center gap-1.5 rounded-full border border-teal-400/30 bg-teal-400/15 px-2.5 py-1 text-[10px] font-semibold text-teal-200">
+                    <Stethoscope size={12} /> Chế độ Bác sĩ · Toàn quyền tra cứu
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] text-emerald-300">
+                    <LockKeyhole size={12} /> {isPatientLoggedIn ? 'Khóa quyền riêng tư cá nhân' : 'Mã hóa bảo mật'}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {isPatientLoggedIn ? (
+              /* Chế độ Bệnh nhân đã đăng nhập: Khóa cứng chỉ xem hồ sơ của chính mình */
+              <div className="space-y-4">
+                <div className="flex flex-col justify-between gap-4 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-4 sm:flex-row sm:items-center">
+                  <div className="flex items-start gap-3">
+                    <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl bg-emerald-400/15 text-emerald-300">
+                      <ShieldCheck size={22} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-emerald-200">
+                        Đang xem hồ sơ bảo mật của: <span className="text-white">{authUser.fullName}</span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                        <span className="rounded-md bg-black/30 px-2 py-0.5 font-mono text-cyan-200">
+                          Mã BN: {authUser.patientId}
+                        </span>
+                        {authUser.phoneNumber && (
+                          <span className="rounded-md bg-black/30 px-2 py-0.5 font-mono text-slate-300">
+                            SĐT: {authUser.phoneNumber}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1.5 text-[11px] text-slate-400">
+                        Để bảo vệ quyền riêng tư y tế, tài khoản Bệnh nhân chỉ được phép xem kết quả của chính mình và không thể tra cứu hồ sơ bệnh nhân khác.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => onLookup(authUser.patientId, authUser.phoneNumber || '')}
+                      className="neon-button inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold disabled:opacity-60"
+                    >
+                      <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+                      {isLoading ? 'Đang tải...' : 'Làm mới kết quả'}
+                    </button>
+                    {onLogout && (
+                      <button
+                        type="button"
+                        onClick={onLogout}
+                        title="Đăng xuất để tra cứu hồ sơ khác"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+                      >
+                        <LogOut size={14} /> Thoát
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {activeError && (
+                  <div className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+                    <AlertCircle size={15} className="flex-shrink-0" />
+                    <span>{activeError}</span>
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              /* Chế độ Khách (tra cứu nhanh) hoặc Bác sĩ / KTV Lab */
+              <>
+                <form onSubmit={submit} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                  <label className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300" size={17} />
+                    <input 
+                      value={patientCode} 
+                      onChange={e => { setPatientCode(e.target.value); setLocalError(''); }} 
+                      placeholder="Mã hồ sơ, VD: BN2026-089" 
+                      className="w-full rounded-xl border border-white/10 bg-black/20 py-3 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-400/10 font-mono" 
+                    />
+                  </label>
 
-            <form onSubmit={submit} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-              <label className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300" size={17} />
-                <input 
-                  value={patientCode} 
-                  onChange={e => { setPatientCode(e.target.value); setLocalError(''); }} 
-                  placeholder="Mã hồ sơ, VD: BN2026-089" 
-                  className="w-full rounded-xl border border-white/10 bg-black/20 py-3 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-400/10 font-mono" 
-                />
-              </label>
+                  <label className="relative">
+                    <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                    <input 
+                      value={phoneNumber} 
+                      onChange={e => { setPhoneNumber(e.target.value); setLocalError(''); }} 
+                      placeholder="Số điện thoại xác thực" 
+                      className="w-full rounded-xl border border-white/10 bg-black/20 py-3 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-400/10 font-mono" 
+                    />
+                  </label>
 
-              <label className="relative">
-                <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                <input 
-                  value={phoneNumber} 
-                  onChange={e => { setPhoneNumber(e.target.value); setLocalError(''); }} 
-                  placeholder="Số điện thoại xác thực" 
-                  className="w-full rounded-xl border border-white/10 bg-black/20 py-3 pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-400/10 font-mono" 
-                />
-              </label>
+                  <button 
+                    type="submit"
+                    disabled={isLoading} 
+                    className="neon-button inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {isLoading ? <Clock3 className="animate-spin" size={17} /> : <ArrowRight size={17} />} 
+                    {isLoading ? 'Đang gọi API...' : 'Tra cứu'}
+                  </button>
+                </form>
 
-              <button 
-                type="submit"
-                disabled={isLoading} 
-                className="neon-button inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold disabled:cursor-wait disabled:opacity-60"
-              >
-                {isLoading ? <Clock3 className="animate-spin" size={17} /> : <ArrowRight size={17} />} 
-                {isLoading ? 'Đang gọi API...' : 'Tra cứu'}
-              </button>
-            </form>
+                {activeError && (
+                  <div className="mt-3 flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+                    <AlertCircle size={15} className="flex-shrink-0" />
+                    <span>{activeError}</span>
+                  </div>
+                )}
 
-            {activeError && (
-              <div className="mt-3 flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
-                <AlertCircle size={15} className="flex-shrink-0" />
-                <span>{activeError}</span>
-              </div>
+                {/* Quick Presets */}
+                <div className="mt-4 flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
+                  <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                    <Sparkles size={12} className="text-cyan-300" /> Dữ liệu mẫu thực tế:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPreset('BN2026-089', '0912345678')}
+                    className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-cyan-400/15 border border-white/10 text-[11px] font-mono text-cyan-200 transition-colors"
+                  >
+                    BN2026-089 (Đủ kết quả)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPreset('BN2026-105', '0934567890')}
+                    className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-400/15 border border-white/10 text-[11px] font-mono text-amber-200 transition-colors"
+                  >
+                    BN2026-105 (Đang phân tích Lab)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPreset('BN2026-042', '0923456789')}
+                    className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-purple-400/15 border border-white/10 text-[11px] font-mono text-purple-200 transition-colors"
+                  >
+                    BN2026-042 (Thiếu máu nhẹ)
+                  </button>
+                </div>
+              </>
             )}
-
-            {/* Quick Presets */}
-            <div className="mt-4 flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
-              <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                <Sparkles size={12} className="text-cyan-300" /> Dữ liệu mẫu thực tế:
-              </span>
-              <button
-                type="button"
-                onClick={() => handleSelectPreset('BN2026-089', '0912345678')}
-                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-cyan-400/15 border border-white/10 text-[11px] font-mono text-cyan-200 transition-colors"
-              >
-                BN2026-089 (Đủ kết quả)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectPreset('BN2026-105', '0934567890')}
-                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-400/15 border border-white/10 text-[11px] font-mono text-amber-200 transition-colors"
-              >
-                BN2026-105 (Đang phân tích Lab)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectPreset('BN2026-042', '0923456789')}
-                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-purple-400/15 border border-white/10 text-[11px] font-mono text-purple-200 transition-colors"
-              >
-                BN2026-042 (Thiếu máu nhẹ)
-              </button>
-            </div>
 
           </div>
         </div>
