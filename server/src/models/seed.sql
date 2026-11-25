@@ -8,6 +8,7 @@ USE saharamedcare_db;
 
 -- 1. Thêm danh mục Bác sĩ
 INSERT INTO doctors (doctor_id, full_name, title, department, clinic_room, phone, email) VALUES
+('BS-001', 'TS. BS. Trần Minh Quân', 'TS. BS.', 'Khoa Xét nghiệm Trung tâm', 'Phòng Trưởng khoa Xét nghiệm', '0901234567', 'minhquan@saharamedcare.vn'),
 ('DOC01', 'Lê Hoàng Nam', 'BS. CKII.', 'Khoa Khám bệnh - Nội tổng quát', 'Bàn khám số 08', '0903112233', 'nam.lh@saharamedcare.vn'),
 ('DOC02', 'Trần Minh Quân', 'TS. BS.', 'Khoa Xét nghiệm Trung tâm', 'Phòng Trưởng khoa', '0903223344', 'quan.tm@saharamedcare.vn'),
 ('DOC03', 'Phạm Quỳnh Trang', 'BS. CKII.', 'Khoa Phụ sản & Nội khoa', 'Bàn khám số 03', '0903334455', 'trang.pq@saharamedcare.vn'),
@@ -253,3 +254,14 @@ INSERT INTO lab_images (order_id, modality, title, performed_time, radiologist, 
     'Gan: Kích thước không to, nhu mô tăng âm lan tỏa mức độ nhẹ, giảm âm vùng thấp, bờ đều. Tĩnh mạch cửa không giãn. Túi mật: Kích thước bình thường, thành mỏng, dịch mật trong không thấy sỏi. Tụy, Lách: Nhu mô đồng nhất. Thận 2 bên: Kích thước bình thường, đài bể thận không giãn, không có sỏi cản âm. Bàng quang: Thành mỏng, không có sỏi.',
     'Hình ảnh Gan nhiễm mỡ mức độ nhẹ (Độ 1). Các tạng khác trong ổ bụng chưa phát hiện bất thường.'
 );
+
+-- 9. Tài khoản người dùng mẫu (Seed Users)
+-- Mật khẩu mặc định: 123456 (Bcrypt hash)
+INSERT INTO users (role, identifier, password_hash, patient_id, doctor_id) VALUES
+('PATIENT', '0912345678', '$2b$10$jZXr.9Uz1n8V2hZniVkueuXcSOB0fEwiI538gK9.zVCXaWaVFUqVm', 'BN2026-089', NULL),
+('PATIENT', '0987654321', '$2b$10$jZXr.9Uz1n8V2hZniVkueuXcSOB0fEwiI538gK9.zVCXaWaVFUqVm', 'BN2026-042', NULL),
+('DOCTOR', 'BS-001', '$2b$10$jZXr.9Uz1n8V2hZniVkueuXcSOB0fEwiI538gK9.zVCXaWaVFUqVm', NULL, 'BS-001'),
+('DOCTOR', 'minhquan@saharamedcare.vn', '$2b$10$jZXr.9Uz1n8V2hZniVkueuXcSOB0fEwiI538gK9.zVCXaWaVFUqVm', NULL, 'BS-001'),
+('DOCTOR', 'DOC01', '$2b$10$jZXr.9Uz1n8V2hZniVkueuXcSOB0fEwiI538gK9.zVCXaWaVFUqVm', NULL, 'DOC01')
+ON DUPLICATE KEY UPDATE password_hash=VALUES(password_hash);
+
