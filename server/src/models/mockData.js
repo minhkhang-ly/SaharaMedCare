@@ -6,6 +6,15 @@
 
 export const doctorsData = [
   {
+    doctorId: "BS-001",
+    fullName: "TS. BS. Trần Minh Quân",
+    title: "TS. BS.",
+    department: "Khoa Xét nghiệm Trung tâm",
+    clinicRoom: "Phòng Trưởng khoa Xét nghiệm",
+    phone: "0901234567",
+    email: "minhquan@saharamedcare.vn"
+  },
+  {
     doctorId: "DOC01",
     fullName: "Lê Hoàng Nam",
     title: "BS. CKII.",
@@ -408,3 +417,39 @@ export const mockPatients = {
     ]
   }
 };
+
+export const usersData = [
+  {
+    userId: 1,
+    role: 'PATIENT',
+    identifier: '0912345678',
+    passwordHash: '$2b$10$jZXr.9Uz1n8V2hZniVkueuXcSOB0fEwiI538gK9.zVCXaWaVFUqVm', // 123456
+    patientId: 'BN2026-089',
+    doctorId: null
+  },
+  {
+    userId: 2,
+    role: 'PATIENT',
+    identifier: '0987654321',
+    passwordHash: '$2b$10$jZXr.9Uz1n8V2hZniVkueuXcSOB0fEwiI538gK9.zVCXaWaVFUqVm', // 123456
+    patientId: 'BN2026-042',
+    doctorId: null
+  },
+  {
+    userId: 101,
+    role: 'DOCTOR',
+    identifier: 'BS-001',
+    passwordHash: '$2b$10$jZXr.9Uz1n8V2hZniVkueuXcSOB0fEwiI538gK9.zVCXaWaVFUqVm', // 123456
+    patientId: null,
+    doctorId: 'BS-001'
+  },
+  {
+    userId: 102,
+    role: 'DOCTOR',
+    identifier: 'minhquan@saharamedcare.vn',
+    passwordHash: '$2b$10$jZXr.9Uz1n8V2hZniVkueuXcSOB0fEwiI538gK9.zVCXaWaVFUqVm', // 123456
+    patientId: null,
+    doctorId: 'BS-001'
+  }
+];
+

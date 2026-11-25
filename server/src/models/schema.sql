@@ -152,3 +152,19 @@ CREATE TABLE IF NOT EXISTS ai_chat_messages (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (session_id) REFERENCES ai_chat_sessions(session_id) ON DELETE CASCADE
 );
+
+-- 10. Bảng Tài khoản người dùng (Users Authentication)
+CREATE TABLE IF NOT EXISTS users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    role ENUM('PATIENT', 'DOCTOR', 'ADMIN') NOT NULL DEFAULT 'PATIENT',
+    identifier VARCHAR(100) NOT NULL UNIQUE, -- SĐT (Bệnh nhân) hoặc Mã BS/Email (Bác sĩ)
+    password_hash VARCHAR(255) NOT NULL,
+    patient_id VARCHAR(20) NULL,
+    doctor_id VARCHAR(20) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE SET NULL,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE SET NULL,
+    INDEX idx_user_role_identifier (role, identifier)
+);
+

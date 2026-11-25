@@ -92,7 +92,14 @@ npm run test:api
 | `GET` | `/api/health` | Kiểm tra tình trạng hoạt động của API Server |
 | `GET` | `/api` | Danh mục tổng hợp tất cả các routes khả dụng |
 
-### 2. Tra cứu & Quản lý Bệnh nhân (`/api/patients`)
+### 2. Xác thực & Phân quyền (Authentication & Authorization)
+| Method | Endpoint | Quyền | Mô tả | Body mẫu / Header |
+| :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Công khai | **Đăng ký tài khoản Bệnh nhân** | `{"role": "PATIENT", "fullName": "...", "phoneNumber": "...", "dateOfBirth": "...", "gender": "...", "password": "..."}` |
+| `POST` | `/api/auth/login` | Công khai | **Đăng nhập Bệnh nhân / Bác sĩ** | `{"role": "PATIENT" \| "DOCTOR", "identifier": "...", "password": "..."}` |
+| `GET` | `/api/auth/me` | Bearer Token | Lấy thông tin user hiện tại | Header: `Authorization: Bearer <JWT>` |
+
+### 3. Tra cứu & Quản lý Bệnh nhân (`/api/patients`)
 | Method | Endpoint | Mô tả | Body mẫu / Tham số |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/patients/lookup` | **Tra cứu hồ sơ cho Hero Lookup** | `{"patientCode": "BN2026-089", "phone": "0912345678"}` |

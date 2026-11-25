@@ -9,6 +9,7 @@ import chatbotRoutes from './routes/chatbotRoutes.js';
 import patientRoutes from './routes/patientRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
 import catalogRoutes from './routes/catalogRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 import { initLabStatusSocket } from './sockets/labStatusSocket.js';
 import { checkDbConnection } from './config/db.js';
 
@@ -41,6 +42,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/lab-results', labResultRoutes);
 app.use('/api/doctors', doctorRoutes);
@@ -66,6 +68,11 @@ app.get('/api', (req, res) => {
     version: '1.0.0',
     endpoints: {
       health: 'GET /api/health',
+      auth: {
+        register: 'POST /api/auth/register',
+        login: 'POST /api/auth/login',
+        me: 'GET /api/auth/me'
+      },
       lookup: 'POST /api/patients/lookup',
       patients: {
         list: 'GET /api/patients',
